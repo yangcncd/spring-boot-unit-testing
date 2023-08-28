@@ -99,10 +99,10 @@ public class ApplicationExampleTest {
     @DisplayName("Find grade point average") // scope prototype means every time Bean is new created Instance
     public void findGradePointAverage() {
         Assertions.assertAll("Testing all assert Equals",
-                ()-> Assertions.assertEquals(305.76,studentGrades.addGradeResultsForSingleClass(
+                () -> Assertions.assertEquals(305.76, studentGrades.addGradeResultsForSingleClass(
                         studentGrades.getMathGradeResults()
                 )),
-                ()->Assertions.assertEquals(76.44,studentGrades.findGradePointAverage(studentGrades.getMathGradeResults()
+                () -> Assertions.assertEquals(76.44, studentGrades.findGradePointAverage(studentGrades.getMathGradeResults()
                 ))
         );
     }

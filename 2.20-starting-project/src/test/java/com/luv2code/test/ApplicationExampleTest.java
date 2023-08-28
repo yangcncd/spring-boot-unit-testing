@@ -1,11 +1,15 @@
 package com.luv2code.test;
 
 import com.luv2code.component.MvcTestingExampleApplication;
+import com.luv2code.component.dao.ApplicationDao;
 import com.luv2code.component.models.CollegeStudent;
 import com.luv2code.component.models.StudentGrades;
+import com.luv2code.component.service.ApplicationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -15,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @SpringBootTest(classes= MvcTestingExampleApplication.class)
 public class ApplicationExampleTest {
@@ -34,7 +39,7 @@ public class ApplicationExampleTest {
     private String schoolName;
 
     @Autowired
-    CollegeStudent student;
+    CollegeStudent student1;
 
     @Autowired
     StudentGrades studentGrades;
@@ -42,24 +47,43 @@ public class ApplicationExampleTest {
     @Autowired
     ApplicationContext context;
 
+    @Mock
+    ApplicationDao applicationDao;
+
+    @InjectMocks
+    ApplicationService applicationService;
+
     @BeforeEach
     public void beforeEach() {
         count = count + 1;
         System.out.println("Testing: " + appInfo + " which is " + appDescription +
                 "  Version: " + appVersion + ". Execution of test method " + count);
-        student.setFirstname("Eric");
-        student.setLastname("Roby");
-        student.setEmailAddress("eric.roby@luv2code_school.com");
-        studentGrades.setMathGradeResults(new ArrayList<>(Arrays.asList(100.0, 85.0, 76.50, 91.75)));
-        student.setStudentGrades(studentGrades);
+        student1.setFirstname("Eric");
+        student1.setLastname("Roby");
+        student1.setEmailAddress("eric.roby@luv2code_school.com");
+//        studentGrades.setMathGradeResults(new ArrayList<>(Arrays.asList(100.0, 85.0, 76.50, 91.75)));
+        student1.setStudentGrades(studentGrades);
     }
 
-    @DisplayName("Add grade results for student grades not equal")
+    @DisplayName("Add grade results for student1 grades")
     @Test
-    public void addGradeResultsForStudentGradesAssertNotEquals() {
-        assertNotEquals(0, studentGrades.addGradeResultsForSingleClass(
-                student.getStudentGrades().getMathGradeResults()
+    public void assertEqualsTestAddGrades() {
+        when(applicationDao.addGradeResultsForSingleClass(studentGrades.getMathGradeResults()))
+                .thenReturn(100.00);
+
+
+        assertEquals(100, applicationService.addGradeResultsForSingleClass(
+                student1.getStudentGrades().getMathGradeResults()
         ));
+
+        //check if applicationDao is really called
+        verify(applicationDao).addGradeResultsForSingleClass(studentGrades.getMathGradeResults());
+        //follow will be fail because we didn't call findGradePointAverage()
+        //verify(applicationDao).findGradePointAverage(studentGrades.getMathGradeResults());
+
+        // check how many times the method is called
+        verify(applicationDao,times(1)).addGradeResultsForSingleClass(studentGrades.getMathGradeResults());
+        verify(applicationDao,times(0)).findGradePointAverage(studentGrades.getMathGradeResults());
     }
 
     @DisplayName("Is grade greater")
@@ -79,11 +103,11 @@ public class ApplicationExampleTest {
     @DisplayName("Check Null for student grades")
     @Test
     public void checkNullForStudentGrades() {
-        assertNotNull(studentGrades.checkNull(student.getStudentGrades().getMathGradeResults()),
+        assertNotNull(studentGrades.checkNull(student1.getStudentGrades().getMathGradeResults()),
                 "object should not be null");
     }
 
-    @DisplayName("Create student without grade init")
+    @DisplayName("Create student1 without grade init")
     @Test
     public void createStudentWithoutGradesInit() {
         CollegeStudent studentTwo = context.getBean("collegeStudent", CollegeStudent.class);
@@ -101,7 +125,7 @@ public class ApplicationExampleTest {
     public void verifyStudentsArePrototypes() {
         CollegeStudent studentTwo = context.getBean("collegeStudent", CollegeStudent.class);
 
-        assertNotSame(student, studentTwo);
+        assertNotSame(student1, studentTwo);
     }
 
     @DisplayName("Find Grade Point Average")
@@ -109,9 +133,9 @@ public class ApplicationExampleTest {
     public void findGradePointAverage() {
         assertAll("Testing all assertEquals",
                 ()-> assertEquals(353.25, studentGrades.addGradeResultsForSingleClass(
-                        student.getStudentGrades().getMathGradeResults())),
+                        student1.getStudentGrades().getMathGradeResults())),
                 ()-> assertEquals(88.31, studentGrades.findGradePointAverage(
-                        student.getStudentGrades().getMathGradeResults()))
+                        student1.getStudentGrades().getMathGradeResults()))
         );
     }
 }
