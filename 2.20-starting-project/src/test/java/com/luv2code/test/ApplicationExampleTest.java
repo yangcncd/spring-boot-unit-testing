@@ -13,10 +13,12 @@ import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.ApplicationContext;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -47,10 +49,16 @@ public class ApplicationExampleTest {
     @Autowired
     ApplicationContext context;
 
-    @Mock
+//    @Mock
+//    ApplicationDao applicationDao;
+//
+//    @InjectMocks
+//    ApplicationService applicationService;
+
+    @MockBean
     ApplicationDao applicationDao;
 
-    @InjectMocks
+    @Autowired
     ApplicationService applicationService;
 
     @BeforeEach
@@ -61,17 +69,24 @@ public class ApplicationExampleTest {
         student1.setFirstname("Eric");
         student1.setLastname("Roby");
         student1.setEmailAddress("eric.roby@luv2code_school.com");
-//        studentGrades.setMathGradeResults(new ArrayList<>(Arrays.asList(100.0, 85.0, 76.50, 91.75)));
+        studentGrades.setMathGradeResults(new ArrayList<>(Arrays.asList(100.0, 85.0, 76.50, 91.75)));
         student1.setStudentGrades(studentGrades);
     }
 
     @DisplayName("Add grade results for student1 grades")
     @Test
     public void assertEqualsTestAddGrades() {
-        when(applicationDao.addGradeResultsForSingleClass(studentGrades.getMathGradeResults()))
-                .thenReturn(100.00);
+        System.out.println("studentGrades is "+studentGrades.toString());
+
+        when(applicationDao.addGradeResultsForSingleClass(
+                studentGrades.getMathGradeResults()
+        )).thenReturn(100.00);
+
+        System.out.println("studentGrades.getMathGradeResults() is "+studentGrades.getMathGradeResults());
 
 
+        System.out.println("student1.getStudentGrades().getMathGradeResults() is "
+                +student1.getStudentGrades().getMathGradeResults());
         assertEquals(100, applicationService.addGradeResultsForSingleClass(
                 student1.getStudentGrades().getMathGradeResults()
         ));
@@ -81,8 +96,13 @@ public class ApplicationExampleTest {
         //follow will be fail because we didn't call findGradePointAverage()
         //verify(applicationDao).findGradePointAverage(studentGrades.getMathGradeResults());
 
+        double dd = applicationService.addGradeResultsForSingleClass(
+                student1.getStudentGrades().getMathGradeResults()
+        );
+        System.out.println("dd is " + dd);
+
         // check how many times the method is called
-        verify(applicationDao,times(1)).addGradeResultsForSingleClass(studentGrades.getMathGradeResults());
+        verify(applicationDao,times(2)).addGradeResultsForSingleClass(studentGrades.getMathGradeResults());
         verify(applicationDao,times(0)).findGradePointAverage(studentGrades.getMathGradeResults());
     }
 
@@ -137,6 +157,38 @@ public class ApplicationExampleTest {
                 ()-> assertEquals(88.31, studentGrades.findGradePointAverage(
                         student1.getStudentGrades().getMathGradeResults()))
         );
+    }
+
+    //Example to throw exceptions
+    @DisplayName("Run time exception")
+    @Test
+    public void throwRunTimeErrTest(){
+        CollegeStudent nullStud = (CollegeStudent)context.getBean("collegeStudent");
+
+        doThrow(new RuntimeException()).when(applicationDao).checkNull(nullStud);
+        assertThrows(RuntimeException.class, ()->{
+            applicationDao.checkNull(nullStud);
+        });
+
+        verify(applicationDao,times(1)).checkNull(nullStud);
+    }
+    //Example to throw (consecutive) exceptions
+    @DisplayName("Consective run time exception")
+    @Test
+    public void throwMultipleRunTimeErrTest(){
+        CollegeStudent nullStud = (CollegeStudent)context.getBean("collegeStudent");
+
+        when(applicationDao.checkNull(nullStud))
+                .thenThrow(new RuntimeException())
+                        .thenReturn("Don't throw Exception 2nd Time");
+        // first call applicationDao.checkNull(nullStud); will throw exception
+        assertThrows(RuntimeException.class, ()->{
+            applicationDao.checkNull(nullStud);
+        });
+        // second call applicationDao.checkNull(nullStud); will not throw
+        assertEquals("Don't throw Exception 2nd Time",applicationDao.checkNull(nullStud));
+
+        verify(applicationDao,times(2)).checkNull(nullStud);
     }
 }
 
